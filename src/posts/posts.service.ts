@@ -25,9 +25,7 @@ export class PostsService {
   async findAll() {
     return await this.postsRepository.find({
       relations: ['user'],
-      select: {
-        user: { id: true, username: true, email: true },
-      },
+      select: { user: { id: true, username: true, email: true } },
     });
   }
 
@@ -35,6 +33,7 @@ export class PostsService {
     const post = await this.postsRepository.findOne({
       where: { id },
       relations: ['user'],
+      select: { user: { id: true, username: true } },
     });
     if (!post) throw new NotFoundException('Post not found');
     return post;
