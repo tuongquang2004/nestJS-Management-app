@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Repository } from 'typeorm';
+import { Repository, Like as SearchLike } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { Like } from './entities/like.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from 'src/users/dto/pagination.dto';
+import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
 
 @Injectable()
 export class PostsService {
@@ -22,11 +24,34 @@ export class PostsService {
     return await this.postsRepository.save(newPost);
   }
 
-  async findAll() {
-    return await this.postsRepository.find({
+  async findAll(search: string, page: number, limit: number) {
+    const take = limit || 10;
+    const currentPage = page || 1;
+    const skip = (currentPage - 1) * take;
+
+    const whereCondition = search
+      ? [
+          { title: SearchLike(`%${search}%`) },
+          { content: SearchLike(`%${search}%`) },
+        ]
+      : {};
+
+    const [posts, total] = await this.postsRepository.findAndCount({
+      where: whereCondition,
       relations: ['user'],
       select: { user: { id: true, username: true, email: true } },
+      take: take,
+      skip: skip,
     });
+
+    return {
+      data: posts,
+      info: {
+        totalItems: total,
+        currentPage: currentPage,
+        totalPages: Math.ceil(total / take),
+      },
+    };
   }
 
   async findOne(id: number) {
@@ -79,11 +104,13 @@ export class PostsService {
     return { message: 'You have unliked this post' };
   }
 
-  async getLikes(postId: number) {
+  async getLikes(postId: number, paginationDto: PaginationDto) {
     const [likes, count] = await this.likesRepository.findAndCount({
       where: { post: { id: postId } },
       relations: ['user'], //Lấy dữ liệu user đã like
       select: { user: { id: true, username: true } }, //Chỉ lấy id và username
+      skip: paginationDto.skip,
+      take: paginationDto.limit ?? DEFAULT_PAGE_SIZE,
     });
 
     return {

@@ -8,12 +8,16 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import type { Request } from 'express';
+import { PaginationDto } from 'src/users/dto/pagination.dto';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('posts')
 export class PostsController {
@@ -26,9 +30,14 @@ export class PostsController {
     return this.postsService.create(createPostDto, userId);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(
+    @Query('search') search: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ) {
+    return this.postsService.findAll(search, +page, +limit);
   }
 
   @Get(':id')
@@ -63,7 +72,7 @@ export class PostsController {
   }
 
   @Get(':id/likes')
-  getLikes(@Param('id') id: string) {
-    return this.postsService.getLikes(+id);
+  getLikes(@Param('id') id: string, @Query() paginationDto: PaginationDto) {
+    return this.postsService.getLikes(+id, paginationDto);
   }
 }
