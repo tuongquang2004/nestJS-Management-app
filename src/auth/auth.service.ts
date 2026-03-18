@@ -15,6 +15,7 @@ type AuthInput = {
 type SignInData = {
   userID: number;
   username: string;
+  role: string;
 };
 
 type AuthResult = {
@@ -44,7 +45,7 @@ export class AuthService {
     if (user) {
       const isMatch = await bcrypt.compare(input.password, user.password);
       if (isMatch) {
-        return { userID: user.id, username: user.username };
+        return { userID: user.id, username: user.username, role: user.role };
       }
     }
     return null;
@@ -76,6 +77,7 @@ export class AuthService {
     const tokenPayload = {
       username: user.username,
       sub: user.userID,
+      role: user.role,
     };
     const accessToken = await this.jwtService.signAsync(tokenPayload);
 
