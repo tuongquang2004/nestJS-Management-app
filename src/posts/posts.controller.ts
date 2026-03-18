@@ -75,4 +75,20 @@ export class PostsController {
   getLikes(@Param('id') id: string, @Query() paginationDto: PaginationDto) {
     return this.postsService.getLikes(+id, paginationDto);
   }
+
+  @UseGuards(AuthGuard)
+  @Post(':id/comments')
+  addComment(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Body('content') content: string,
+  ) {
+    const userId = req['user'].userID;
+    return this.postsService.addComment(+id, userId, content);
+  }
+
+  @Get(':id/comments')
+  getComments(@Param('id') id: string) {
+    return this.postsService.getComments(+id);
+  }
 }

@@ -7,12 +7,14 @@ import { Like } from './entities/like.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
+import { Comment } from './entities/comment.entity';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post) private postsRepository: Repository<Post>,
     @InjectRepository(Like) private likesRepository: Repository<Like>,
+    @InjectRepository(Comment) private commentsRepository: Repository<Comment>,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: number) {
@@ -117,5 +119,24 @@ export class PostsService {
       totalLikes: count,
       likedBy: likes.map((name) => name.user),
     };
+  }
+
+  async addComment(postId: number, userId: number, content: string) {
+    const newComment = this.commentsRepository.create({
+      content: content,
+      post: { id: postId },
+      user: { id: userId },
+    });
+    await this.commentsRepository.save(newComment);
+    return { message: 'Comment successfully added', data: newComment };
+  }
+
+  async getComments(postId: number) {
+    return await this.commentsRepository.find({
+      where: { post: { id: postId } },
+      relations: ['user'],
+      select: { user: { id: true, username: true } },
+      order: { createdAt: 'DESC' },
+    });
   }
 }
