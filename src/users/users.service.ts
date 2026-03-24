@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm/dist/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -14,7 +15,13 @@ export class UsersService {
   ) {}
 
   async create(dto: CreateUserDto) {
-    const user = this.userRepository.create(dto);
+    const passwordSalt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(dto.password, passwordSalt);
+
+    const user = this.userRepository.create({
+      ...dto,
+      password: hashedPassword,
+    });
     return await this.userRepository.save(user);
   }
 
@@ -22,11 +29,15 @@ export class UsersService {
     return this.userRepository.find({
       skip: paginationDto.skip,
       take: paginationDto.limit ?? DEFAULT_PAGE_SIZE,
+      select: { id: true, username: true, email: true, role: true },
     });
   }
 
   async findUserById(id: number) {
-    return await this.userRepository.findOne({ where: { id } });
+    return await this.userRepository.findOne({
+      where: { id },
+      select: { id: true, username: true, email: true, role: true },
+    });
   }
 
   async findUserByName(username: string) {
