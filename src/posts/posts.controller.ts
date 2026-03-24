@@ -19,6 +19,8 @@ import type { Request } from 'express';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -88,14 +90,32 @@ export class PostsController {
   addComment(
     @Param('id') id: string,
     @Req() req: Request,
-    @Body('content') content: string,
+    @Body() createCommentDto: CreateCommentDto,
   ) {
     const userId = req['user'].userID;
-    return this.postsService.addComment(+id, userId, content);
+    return this.postsService.addComment(+id, userId, createCommentDto);
   }
 
   @Get(':id/comments')
   getComments(@Param('id') id: string) {
     return this.postsService.getComments(+id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('comments/:commentId')
+  updateComment(
+    @Param('commentId') commentId: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return this.postsService.updateComment(+commentId, updateCommentDto, user);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('comments/:commentId')
+  removeComment(@Param('commentId') commentId: string, @Req() req: Request) {
+    const user = req['user'];
+    return this.postsService.removeComment(+commentId, user);
   }
 }

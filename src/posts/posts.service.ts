@@ -12,6 +12,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
 import { Comment } from './entities/comment.entity';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class PostsService {
@@ -131,9 +133,13 @@ export class PostsService {
     };
   }
 
-  async addComment(postId: number, userId: number, content: string) {
+  async addComment(
+    postId: number,
+    userId: number,
+    createCommentDto: CreateCommentDto,
+  ) {
     const newComment = this.commentsRepository.create({
-      content: content,
+      content: createCommentDto.content,
       post: { id: postId },
       user: { id: userId },
     });
@@ -148,5 +154,34 @@ export class PostsService {
       select: { user: { id: true, username: true } },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async updateComment(
+    commentId: number,
+    updateCommentDto: UpdateCommentDto,
+    reqUser: any,
+  ) {
+    const comment = await this.commentsRepository.findOne({
+      where: { id: commentId },
+      relations: ['user'],
+    });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.user.id !== reqUser.userID && reqUser.role !== 'admin') {
+      throw new ForbiddenException('You cannot edit this comment!');
+    }
+    Object.assign(comment, updateCommentDto);
+    return await this.commentsRepository.save(comment);
+  }
+
+  async removeComment(commentId: number, reqUser: any) {
+    const comment = await this.commentsRepository.findOne({
+      where: { id: commentId },
+      relations: ['user'],
+    });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.user.id !== reqUser.userID && reqUser.role !== 'admin') {
+      throw new ForbiddenException('You cannot delete this comment!');
+    }
+    return await this.commentsRepository.remove(comment);
   }
 }
