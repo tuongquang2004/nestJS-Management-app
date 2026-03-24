@@ -18,12 +18,13 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import type { Request } from 'express';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('posts')
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Post()
   create(@Body() createPostDto: CreatePostDto, @Req() req: Request) {
     const userId = req['user'].userID;
@@ -45,16 +46,22 @@ export class PostsController {
     return this.postsService.findOne(+id);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
+  update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'];
+    return this.postsService.update(+id, updatePostDto, user);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: Request) {
+    const user = req['user'];
+    return this.postsService.remove(+id, user);
   }
 
   @UseGuards(AuthGuard)

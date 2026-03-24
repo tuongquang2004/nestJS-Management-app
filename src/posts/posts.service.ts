@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Repository, Like as SearchLike } from 'typeorm';
@@ -66,14 +70,20 @@ export class PostsService {
     return post;
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto) {
+  async update(id: number, updatePostDto: UpdatePostDto, reqUser: any) {
     const post = await this.findOne(id);
+    if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
+      throw new ForbiddenException('You cannot edit this post!');
+    }
     Object.assign(post, updatePostDto);
     return await this.postsRepository.save(post);
   }
 
-  async remove(id: number) {
+  async remove(id: number, reqUser: any) {
     const post = await this.findOne(id);
+    if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
+      throw new ForbiddenException('You cannot delete this post!');
+    }
     return await this.postsRepository.remove(post);
   }
 

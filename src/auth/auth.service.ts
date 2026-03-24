@@ -57,12 +57,9 @@ export class AuthService {
       throw new BadRequestException('Username existed!');
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(input.password, salt);
-
     const newUser = await this.usersService.create({
       username: input.username,
-      password: hashedPassword,
+      password: input.password,
       email: input.email,
     });
 
@@ -76,7 +73,7 @@ export class AuthService {
   async signIn(user: SignInData): Promise<AuthResult> {
     const tokenPayload = {
       username: user.username,
-      sub: user.userID,
+      userID: user.userID,
       role: user.role,
     };
     const accessToken = await this.jwtService.signAsync(tokenPayload);
