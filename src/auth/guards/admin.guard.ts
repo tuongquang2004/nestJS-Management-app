@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { JWT_SECRET } from 'src/configs/jwt-secret';
 
@@ -17,23 +11,20 @@ export class AdminGuard implements CanActivate {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
 
     if (type !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Token not found!');
+      return false;
     }
 
-    try {
-      const payload = await this.jwtService.verifyAsync(token, {
+    const payload = await this.jwtService
+      .verifyAsync(token, {
         secret: JWT_SECRET,
-      });
+      })
+      .catch(() => null);
 
-      request['user'] = payload;
-
-      if (payload.role !== 'admin') {
-        throw new ForbiddenException('Only admin can do this action!');
-      }
-
-      return true;
-    } catch {
-      throw new UnauthorizedException('Token not valid!');
+    if (!payload || payload.role !== 'admin') {
+      return false;
     }
+
+    request['user'] = payload;
+    return true;
   }
 }
