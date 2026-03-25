@@ -8,6 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Req,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,11 +19,12 @@ import { PaginationDto } from './dto/pagination.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
@@ -36,10 +40,15 @@ export class UsersController {
     return this.usersService.findUserById(+id);
   }
 
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(+id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @Req() req: Request,
+  ) {
+    const reqUser = req['user'];
+    return this.usersService.update(+id, dto, reqUser);
   }
 
   @UseGuards(AuthGuard, AdminGuard)
