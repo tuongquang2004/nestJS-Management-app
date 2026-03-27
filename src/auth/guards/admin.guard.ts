@@ -1,6 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JWT_SECRET } from 'src/configs/jwt-secret';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -14,11 +13,7 @@ export class AdminGuard implements CanActivate {
       return false;
     }
 
-    const payload = await this.jwtService
-      .verifyAsync(token, {
-        secret: JWT_SECRET,
-      })
-      .catch(() => null);
+    const payload = await this.jwtService.verifyAsync(token).catch(() => null);
 
     if (!payload || payload.role !== 'admin') {
       return false;
