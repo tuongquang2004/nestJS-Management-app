@@ -90,6 +90,7 @@ export class PostsService {
   }
 
   async likePost(postId: number, userId: number) {
+    await this.findOne(postId);
     const existingLike = await this.likesRepository.findOne({
       where: { post: { id: postId }, user: { id: userId } },
     });
@@ -108,6 +109,7 @@ export class PostsService {
   }
 
   async unlikePost(postId: number, userId: number) {
+    await this.findOne(postId);
     const existingLike = await this.likesRepository.findOne({
       where: { post: { id: postId }, user: { id: userId } },
     });
@@ -119,6 +121,7 @@ export class PostsService {
   }
 
   async getLikes(postId: number, paginationDto: PaginationDto) {
+    await this.findOne(postId);
     const [likes, count] = await this.likesRepository.findAndCount({
       where: { post: { id: postId } },
       relations: ['user'], //Lấy dữ liệu user đã like
@@ -138,6 +141,7 @@ export class PostsService {
     userId: number,
     createCommentDto: CreateCommentDto,
   ) {
+    await this.findOne(postId);
     const newComment = this.commentsRepository.create({
       content: createCommentDto.content,
       post: { id: postId },
@@ -148,6 +152,7 @@ export class PostsService {
   }
 
   async getComments(postId: number) {
+    await this.findOne(postId);
     return await this.commentsRepository.find({
       where: { post: { id: postId } },
       relations: ['user'],
