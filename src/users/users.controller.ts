@@ -13,18 +13,32 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto, CreateUserResponseDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard, AdminGuard)
+  @ApiOperation({ summary: 'Create a new user' })
+  @ApiResponse({
+    status: 201,
+    description: 'The user has been successfully created.',
+    type: CreateUserResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
