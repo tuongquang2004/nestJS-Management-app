@@ -11,6 +11,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
 import * as bcrypt from 'bcrypt';
+import { ReqUser } from 'src/common/interfaces/req-user.interface';
 
 @Injectable()
 export class UsersService {
@@ -47,7 +48,7 @@ export class UsersService {
     });
   }
 
-  async update(id: number, dto: UpdateUserDto, reqUser: any) {
+  async update(id: number, dto: UpdateUserDto, reqUser: ReqUser) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);

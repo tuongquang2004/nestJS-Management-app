@@ -14,6 +14,7 @@ import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { ReqUser } from 'src/common/interfaces/req-user.interface';
 
 @Injectable()
 export class PostsService {
@@ -72,7 +73,7 @@ export class PostsService {
     return post;
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto, reqUser: any) {
+  async update(id: number, updatePostDto: UpdatePostDto, reqUser: ReqUser) {
     const post = await this.findOne(id);
     if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
       throw new ForbiddenException('You cannot edit this post!');
@@ -81,7 +82,7 @@ export class PostsService {
     return await this.postsRepository.save(post);
   }
 
-  async remove(id: number, reqUser: any) {
+  async remove(id: number, reqUser: ReqUser) {
     const post = await this.findOne(id);
     if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
       throw new ForbiddenException('You cannot delete this post!');
@@ -164,7 +165,7 @@ export class PostsService {
   async updateComment(
     commentId: number,
     updateCommentDto: UpdateCommentDto,
-    reqUser: any,
+    reqUser: ReqUser,
   ) {
     const comment = await this.commentsRepository.findOne({
       where: { id: commentId },
@@ -178,7 +179,7 @@ export class PostsService {
     return await this.commentsRepository.save(comment);
   }
 
-  async removeComment(commentId: number, reqUser: any) {
+  async removeComment(commentId: number, reqUser: ReqUser) {
     const comment = await this.commentsRepository.findOne({
       where: { id: commentId },
       relations: ['user'],

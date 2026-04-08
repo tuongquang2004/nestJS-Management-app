@@ -20,6 +20,7 @@ import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { ReqUser } from 'src/common/interfaces/req-user.interface';
 
 @Controller('posts')
 export class PostsController {
@@ -54,14 +55,14 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
     @Req() req: Request,
   ) {
-    const user = req['user'];
+    const user = req['user'] as ReqUser;
     return this.postsService.update(+id, updatePostDto, user);
   }
 
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: Request) {
-    const user = req['user'];
+    const user = req['user'] as ReqUser;
     return this.postsService.remove(+id, user);
   }
 
@@ -107,14 +108,14 @@ export class PostsController {
     @Body() updateCommentDto: UpdateCommentDto,
     @Req() req: Request,
   ) {
-    const user = req['user'];
+    const user = req['user'] as ReqUser;
     return this.postsService.updateComment(+commentId, updateCommentDto, user);
   }
 
   @UseGuards(AuthGuard)
   @Delete('comments/:commentId')
   removeComment(@Param('commentId') commentId: string, @Req() req: Request) {
-    const user = req['user'];
+    const user = req['user'] as ReqUser;
     return this.postsService.removeComment(+commentId, user);
   }
 }
