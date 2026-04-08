@@ -24,8 +24,9 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
+import { UserResponseDto } from './dto/user-response.dto';
 
-@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -40,8 +41,11 @@ export class UsersController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  async create(@Body() dto: CreateUserDto) {
+    const newUser = await this.usersService.create(dto);
+    return plainToInstance(UserResponseDto, newUser, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @Get()
@@ -50,24 +54,33 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findUserById(+id);
+  async findOne(@Param('id') id: string) {
+    const user = await this.usersService.findUserById(+id);
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
     @Req() req: Request,
   ) {
     const reqUser = req['user'];
-    return this.usersService.update(+id, dto, reqUser);
+    const updatedUser = await this.usersService.update(+id, dto, reqUser);
+    return plainToInstance(UserResponseDto, updatedUser, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const deletedUser = await this.usersService.remove(+id);
+    return plainToInstance(UserResponseDto, deletedUser, {
+      excludeExtraneousValues: true,
+    });
   }
 }
