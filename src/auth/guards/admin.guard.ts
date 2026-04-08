@@ -1,25 +1,21 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    const user = request.user;
 
-    if (type !== 'Bearer' || !token) {
-      return false;
+    if (!user || user.role !== 'admin') {
+      throw new ForbiddenException(
+        'You do not have permission to access this resource',
+      );
     }
-
-    const payload = await this.jwtService.verifyAsync(token).catch(() => null);
-
-    if (!payload || payload.role !== 'admin') {
-      return false;
-    }
-
-    request['user'] = payload;
     return true;
   }
 }
