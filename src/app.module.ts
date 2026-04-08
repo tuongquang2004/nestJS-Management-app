@@ -8,10 +8,18 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { UploadModule } from './upload/upload.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    ThrottlerModule.forRoot([{
+        ttl: 60000,
+        limit: 20,
+      },
+    ]),
 
     TypeOrmModule.forRootAsync({
       imports: [
@@ -44,6 +52,12 @@ import { CacheModule } from '@nestjs/cache-manager';
     UploadModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

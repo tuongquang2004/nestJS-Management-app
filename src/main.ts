@@ -4,9 +4,12 @@ import { HttpExceptionsFilter } from './http-exception.filter';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(helmet());
+  app.enableCors();
   app.useGlobalFilters(new HttpExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({
