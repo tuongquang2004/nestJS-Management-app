@@ -11,14 +11,16 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthDto } from './dto/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { RegisterDto } from 'src/auth/dto/register.dto';
+import { CurrentUser } from 'src/common/decorators/user.decorator';
+import type { ReqUser } from 'src/common/interfaces/req-user.interface';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: CreateUserDto) {
+  register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
@@ -30,7 +32,7 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  getUserInfo(@Req() request) {
-    return request.user;
+  getUserInfo(@CurrentUser() user: ReqUser) {
+    return user;
   }
 }
