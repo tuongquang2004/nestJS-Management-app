@@ -8,9 +8,6 @@ import {
   Delete,
   Query,
   UseGuards,
-  Req,
-  UseInterceptors,
-  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserResponseDto } from './dto/create-user.dto';
@@ -26,6 +23,8 @@ import {
 } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from './dto/user-response.dto';
+import { CurrentUser } from 'src/common/decorators/user.decorator';
+import type { ReqUser } from 'src/common/interfaces/req-user.interface';
 
 @Controller('users')
 export class UsersController {
@@ -66,9 +65,8 @@ export class UsersController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
-    @Req() req: Request,
+    @CurrentUser() reqUser: ReqUser,
   ) {
-    const reqUser = req['user'];
     const updatedUser = await this.usersService.update(+id, dto, reqUser);
     return plainToInstance(UserResponseDto, updatedUser, {
       excludeExtraneousValues: true,

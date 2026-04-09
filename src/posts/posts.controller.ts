@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -15,12 +14,12 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import type { Request } from 'express';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { ReqUser } from 'src/common/interfaces/req-user.interface';
+import type { ReqUser } from 'src/common/interfaces/req-user.interface';
+import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { plainToInstance } from 'class-transformer';
 import { PostResponseDto } from './dto/post-response.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
@@ -32,9 +31,11 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Post()
-  async create(@Body() createPostDto: CreatePostDto, @Req() req: Request) {
-    const userId = req['user'].userID;
-    const newPost = await this.postsService.create(createPostDto, userId);
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @CurrentUser() user: ReqUser,
+  ) {
+    const newPost = await this.postsService.create(createPostDto, user.userID);
     return plainToInstance(PostResponseDto, newPost, {
       excludeExtraneousValues: true,
     });
@@ -71,9 +72,8 @@ export class PostsController {
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
-    @Req() req: Request,
+    @CurrentUser() user: ReqUser,
   ) {
-    const user = req['user'] as ReqUser;
     const updatedPost = await this.postsService.update(
       +id,
       updatePostDto,
@@ -86,8 +86,7 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request) {
-    const user = req['user'] as ReqUser;
+  async remove(@Param('id') id: string, @CurrentUser() user: ReqUser) {
     const deletedPost = await this.postsService.remove(+id, user);
     return plainToInstance(PostResponseDto, deletedPost, {
       excludeExtraneousValues: true,
@@ -96,16 +95,14 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Post(':id/like')
-  likePost(@Param('id') id: string, @Req() req: Request) {
-    const userId = req['user'].userID;
-    return this.postsService.likePost(+id, userId);
+  likePost(@Param('id') id: string, @CurrentUser() user: ReqUser) {
+    return this.postsService.likePost(+id, user.userID);
   }
 
   @UseGuards(AuthGuard)
   @Delete(':id/like')
-  unlikePost(@Param('id') id: string, @Req() req: Request) {
-    const userId = req['user'].userID;
-    return this.postsService.unlikePost(+id, userId);
+  unlikePost(@Param('id') id: string, @CurrentUser() user: ReqUser) {
+    return this.postsService.unlikePost(+id, user.userID);
   }
 
   @Get(':id/likes')
@@ -128,13 +125,12 @@ export class PostsController {
   @Post(':id/comments')
   async addComment(
     @Param('id') id: string,
-    @Req() req: Request,
+    @CurrentUser() user: ReqUser,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    const userId = req['user'].userID;
     const result = await this.postsService.addComment(
       +id,
-      userId,
+      user.userID,
       createCommentDto,
     );
     return {
@@ -160,9 +156,8 @@ export class PostsController {
   async updateComment(
     @Param('commentId') commentId: string,
     @Body() updateCommentDto: UpdateCommentDto,
-    @Req() req: Request,
+    @CurrentUser() user: ReqUser,
   ) {
-    const user = req['user'] as ReqUser;
     const updatedComment = await this.postsService.updateComment(
       +commentId,
       updateCommentDto,
@@ -177,9 +172,8 @@ export class PostsController {
   @Delete('comments/:commentId')
   async removeComment(
     @Param('commentId') commentId: string,
-    @Req() req: Request,
+    @CurrentUser() user: ReqUser,
   ) {
-    const user = req['user'] as ReqUser;
     const deletedComment = await this.postsService.removeComment(
       +commentId,
       user,
