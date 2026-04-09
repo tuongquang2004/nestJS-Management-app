@@ -48,8 +48,11 @@ export class UsersController {
   }
 
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.usersService.findAll(paginationDto);
+  async findAll(@Query() paginationDto: PaginationDto) {
+    const users = await this.usersService.findAll(paginationDto);
+    return plainToInstance(UserResponseDto, users, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @Get(':id')
