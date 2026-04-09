@@ -10,10 +10,19 @@ import { UploadModule } from './upload/upload.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import * as Joi from 'joi';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().default(3306),
+        DB_USERNAME: Joi.string().required(),
+        DB_NAME: Joi.string().required(),
+      }),
+    }),
 
     ThrottlerModule.forRoot([
       {
