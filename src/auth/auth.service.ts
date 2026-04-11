@@ -6,9 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
-import { AuthDto } from './dto/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { RegisterDto } from './dto/register.dto';
+import { AuthDto, RegisterDto } from './dto';
 
 type SignInData = {
   userID: number;

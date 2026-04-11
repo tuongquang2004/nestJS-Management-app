@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { UploadService } from './upload.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { AuthGuard } from 'src/auth/guards';
 import { avatarStorage, postImageStorage } from './configs/multer.config';
 
 @Controller('upload')

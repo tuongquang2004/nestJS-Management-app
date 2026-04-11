@@ -5,15 +5,13 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from './guards/auth.guard';
-import { AuthDto } from './dto/auth.dto';
-import { RegisterDto } from 'src/auth/dto/register.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import type { ReqUser } from 'src/common/interfaces/req-user.interface';
+import { AuthDto, RegisterDto } from './dto';
+import { AuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {

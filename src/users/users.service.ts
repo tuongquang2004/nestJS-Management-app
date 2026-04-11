@@ -3,15 +3,13 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm/dist/common';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationDto } from './dto/pagination.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
 import * as bcrypt from 'bcrypt';
 import { ReqUser } from 'src/common/interfaces/req-user.interface';
+import { CreateUserDto, UpdateUserDto, PaginationDto } from './dto';
+import { User } from './entities';
 
 @Injectable()
 export class UsersService {

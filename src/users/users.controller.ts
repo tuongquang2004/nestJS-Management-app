@@ -10,11 +10,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, CreateUserResponseDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationDto } from './dto/pagination.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -22,9 +17,16 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
-import { UserResponseDto } from './dto/user-response.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import type { ReqUser } from 'src/common/interfaces/req-user.interface';
+import {
+  CreateUserDto,
+  CreateUserResponseDto,
+  UpdateUserDto,
+  PaginationDto,
+  UserResponseDto,
+} from './dto';
+import { AdminGuard, AuthGuard } from 'src/auth/guards';
 
 @Controller('users')
 export class UsersController {

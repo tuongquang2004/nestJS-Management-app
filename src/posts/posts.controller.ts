@@ -11,19 +11,21 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
 import type { ReqUser } from 'src/common/interfaces/req-user.interface';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { plainToInstance } from 'class-transformer';
-import { PostResponseDto } from './dto/post-response.dto';
-import { CommentResponseDto } from './dto/comment-response.dto';
 import { UserResponseDto } from 'src/users/dto/user-response.dto';
+import {
+  CreatePostDto,
+  UpdatePostDto,
+  CreateCommentDto,
+  UpdateCommentDto,
+  PostResponseDto,
+  CommentResponseDto,
+} from './dto';
 
 @Controller('posts')
 export class PostsController {

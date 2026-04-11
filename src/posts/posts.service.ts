@@ -6,15 +6,13 @@ import {
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Repository, Like as SearchLike } from 'typeorm';
-import { Post } from './entities/post.entity';
-import { Like } from './entities/like.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
-import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ReqUser } from 'src/common/interfaces/req-user.interface';
+import { Post, Like, Comment } from './entities';
 
 @Injectable()
 export class PostsService {
