@@ -90,26 +90,7 @@ export class PostsService {
     return await this.postsRepository.remove(post);
   }
 
-  async likePost(postId: number, userId: number) {
-    await this.findOne(postId);
-    const existingLike = await this.likesRepository.findOne({
-      where: { post: { id: postId }, user: { id: userId } },
-    });
-
-    if (existingLike) {
-      return { message: 'You have liked this post' };
-    }
-
-    const newLike = this.likesRepository.create({
-      post: { id: postId },
-      user: { id: userId },
-    });
-    await this.likesRepository.save(newLike);
-
-    return { message: 'Like successfully' };
-  }
-
-  async unlikePost(postId: number, userId: number) {
+  async toggleLike(postId: number, userId: number) {
     await this.findOne(postId);
     const existingLike = await this.likesRepository.findOne({
       where: { post: { id: postId }, user: { id: userId } },
@@ -117,8 +98,15 @@ export class PostsService {
 
     if (existingLike) {
       await this.likesRepository.remove(existingLike);
+      return { message: 'You have unliked this post' };
     }
-    return { message: 'You have unliked this post' };
+
+    const newLike = this.likesRepository.create({
+      post: { id: postId },
+      user: { id: userId },
+    });
+    await this.likesRepository.save(newLike);
+    return { message: 'Like successfully' };
   }
 
   async getLikes(postId: number, paginationDto: PaginationDto) {

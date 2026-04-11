@@ -95,14 +95,8 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Post(':id/like')
-  likePost(@Param('id') id: string, @CurrentUser() user: ReqUser) {
-    return this.postsService.likePost(+id, user.userID);
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete(':id/like')
-  unlikePost(@Param('id') id: string, @CurrentUser() user: ReqUser) {
-    return this.postsService.unlikePost(+id, user.userID);
+  toggleLike(@Param('id') id: string, @CurrentUser() user: ReqUser) {
+    return this.postsService.toggleLike(+id, user.userID);
   }
 
   @Get(':id/likes')
