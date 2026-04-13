@@ -8,7 +8,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { Repository, Like as SearchLike } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/users/dto/pagination.dto';
-import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
+import { DEFAULT_PAGE_SIZE } from 'src/common/constants/constants';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ReqUser } from 'src/common/interfaces/req-user.interface';
