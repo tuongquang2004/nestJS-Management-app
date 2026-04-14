@@ -21,7 +21,6 @@ import { CurrentUser } from '../common/decorators/user.decorator';
 import type { ReqUser } from '../common/interfaces/req-user.interface';
 import {
   CreateUserDto,
-  CreateUserResponseDto,
   UpdateUserDto,
   PaginationDto,
   UserResponseDto,
@@ -38,7 +37,7 @@ export class UsersController {
   @ApiResponse({
     status: 201,
     description: 'The user has been successfully created.',
-    type: CreateUserResponseDto,
+    type: UserResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
