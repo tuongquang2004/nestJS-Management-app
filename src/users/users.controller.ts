@@ -41,50 +41,35 @@ export class UsersController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
-  async create(@Body() dto: CreateUserDto) {
-    const newUser = await this.usersService.create(dto);
-    return plainToInstance(UserResponseDto, newUser, {
-      excludeExtraneousValues: true,
-    });
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
   }
 
   @UseGuards(AuthGuard)
   @Get()
-  async findAll(@Query() paginationDto: PaginationDto) {
-    const users = await this.usersService.findAll(paginationDto);
-    return plainToInstance(UserResponseDto, users, {
-      excludeExtraneousValues: true,
-    });
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.usersService.findAll(paginationDto);
   }
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findUserById(+id);
-    return plainToInstance(UserResponseDto, user, {
-      excludeExtraneousValues: true,
-    });
+  findOne(@Param('id') id: string) {
+    return this.usersService.findUserById(+id);
   }
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  async update(
+  update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
     @CurrentUser() reqUser: ReqUser,
   ) {
-    const updatedUser = await this.usersService.update(+id, dto, reqUser);
-    return plainToInstance(UserResponseDto, updatedUser, {
-      excludeExtraneousValues: true,
-    });
+    return this.usersService.update(+id, dto, reqUser);
   }
 
   @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const deletedUser = await this.usersService.remove(+id);
-    return plainToInstance(UserResponseDto, deletedUser, {
-      excludeExtraneousValues: true,
-    });
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(+id);
   }
 }
