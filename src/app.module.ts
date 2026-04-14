@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,18 +10,15 @@ import { UploadModule } from './upload/upload.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import * as Joi from 'joi';
+import { validateEnv } from './config/env.validation';
+import { AppConfigService } from './config/app-config.service';
 
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema: Joi.object({
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().default(3306),
-        DB_USERNAME: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
-      }),
+      validate: validateEnv,
     }),
 
     ThrottlerModule.forRoot([
@@ -39,18 +36,18 @@ import * as Joi from 'joi';
           isGlobal: true,
         }),
       ],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (appConfigService: AppConfigService) => ({
         type: 'mysql',
-        host: configService.get('DB_HOST'),
-        port: +configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
+        host: appConfigService.dbHost,
+        port: appConfigService.dbPort,
+        username: appConfigService.dbUsername,
+        password: appConfigService.dbPassword,
+        database: appConfigService.dbName,
         autoLoadEntities: true,
         synchronize: false,
         migrations: ['dist/migrations/*{.ts,.js}'],
       }),
-      inject: [ConfigService],
+      inject: [AppConfigService],
     }),
 
     UsersModule,
@@ -64,10 +61,12 @@ import * as Joi from 'joi';
   controllers: [AppController],
   providers: [
     AppService,
+    AppConfigService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
   ],
+  exports: [AppConfigService],
 })
 export class AppModule {}
