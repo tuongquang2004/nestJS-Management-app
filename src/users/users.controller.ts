@@ -49,6 +49,7 @@ export class UsersController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const users = await this.usersService.findAll(paginationDto);
@@ -57,6 +58,7 @@ export class UsersController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const user = await this.usersService.findUserById(+id);
