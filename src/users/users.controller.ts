@@ -17,8 +17,8 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
-import { CurrentUser } from 'src/common/decorators/user.decorator';
-import type { ReqUser } from 'src/common/interfaces/req-user.interface';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import type { ReqUser } from '../common/interfaces/req-user.interface';
 import {
   CreateUserDto,
   CreateUserResponseDto,
@@ -26,7 +26,7 @@ import {
   PaginationDto,
   UserResponseDto,
 } from './dto';
-import { AdminGuard, AuthGuard } from 'src/auth/guards';
+import { AdminGuard, AuthGuard } from '../auth/guards';
 
 @Controller('users')
 export class UsersController {
