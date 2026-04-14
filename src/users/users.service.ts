@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DEFAULT_PAGE_SIZE } from 'src/common/constants/constants';
+import { DEFAULT_PAGE_SIZE } from '../common/constants/constants';
 import * as bcrypt from 'bcrypt';
 import { ReqUser } from 'src/common/interfaces/req-user.interface';
 import { CreateUserDto, UpdateUserDto, PaginationDto } from './dto';
