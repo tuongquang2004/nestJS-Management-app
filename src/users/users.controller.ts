@@ -41,19 +41,19 @@ export class UsersController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
-  create(@Body() dto: CreateUserDto) {
+  create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     return this.usersService.create(dto);
   }
 
   @UseGuards(AuthGuard)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
+  findAll(@Query() paginationDto: PaginationDto): Promise<UserResponseDto[]> {
     return this.usersService.findAll(paginationDto);
   }
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<UserResponseDto | null> {
     return this.usersService.findUserById(+id);
   }
 
@@ -63,13 +63,13 @@ export class UsersController {
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
     @CurrentUser() reqUser: ReqUser,
-  ) {
+  ): Promise<UserResponseDto> {
     return this.usersService.update(+id, dto, reqUser);
   }
 
   @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string): Promise<UserResponseDto> {
     return this.usersService.remove(+id);
   }
 }

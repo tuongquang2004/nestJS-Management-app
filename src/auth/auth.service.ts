@@ -14,7 +14,7 @@ type SignInData = {
   role: string;
 };
 
-type AuthResult = {
+export type AuthResult = {
   accessToken: string;
   userID: number;
   username: string;
