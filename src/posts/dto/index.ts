@@ -4,3 +4,4 @@ export * from './create-comment.dto';
 export * from './update-comment.dto';
 export * from './post-response.dto';
 export * from './comment-response.dto';
+export * from './post-query.dto';

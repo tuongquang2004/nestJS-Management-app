@@ -23,6 +23,7 @@ import {
   UpdateCommentDto,
   PostResponseDto,
   CommentResponseDto,
+  PostQueryDto,
 } from './dto';
 
 @Controller('posts')
@@ -40,12 +41,12 @@ export class PostsController {
 
   @UseInterceptors(CacheInterceptor)
   @Get()
-  findAll(
-    @Query('search') search: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-  ): Promise<any> {
-    return this.postsService.findAll(search, +page, +limit);
+  findAll(@Query() query: PostQueryDto): Promise<any> {
+    return this.postsService.findAll(
+      query.search || '',
+      query.page || 1,
+      query.limit || 10,
+    );
   }
 
   @Get(':id')
