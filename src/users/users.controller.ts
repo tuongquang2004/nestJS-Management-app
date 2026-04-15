@@ -16,7 +16,6 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import type { ReqUser } from '../common/interfaces/req-user.interface';
 import {
@@ -25,14 +24,17 @@ import {
   PaginationDto,
   UserResponseDto,
 } from './dto';
-import { AdminGuard, AuthGuard } from '../auth/guards';
+import { AuthGuard } from '../auth/guards';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({
     status: 201,
@@ -67,7 +69,8 @@ export class UsersController {
     return this.usersService.update(+id, dto, reqUser);
   }
 
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string): Promise<UserResponseDto> {
     return this.usersService.remove(+id);

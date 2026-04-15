@@ -16,8 +16,6 @@ import { PaginationDto } from '../users/dto/pagination.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import type { ReqUser } from '../common/interfaces/req-user.interface';
 import { CurrentUser } from '../common/decorators/user.decorator';
-import { plainToInstance } from 'class-transformer';
-import { UserResponseDto } from '../users/dto/user-response.dto';
 import {
   CreatePostDto,
   UpdatePostDto,
