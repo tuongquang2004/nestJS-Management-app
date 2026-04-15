@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -50,77 +51,81 @@ export class PostsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<PostResponseDto | null> {
-    return this.postsService.findOne(+id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PostResponseDto | null> {
+    return this.postsService.findOne(id);
   }
 
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
     @CurrentUser() user: ReqUser,
   ): Promise<PostResponseDto> {
-    return this.postsService.update(+id, updatePostDto, user);
+    return this.postsService.update(id, updatePostDto, user);
   }
 
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: ReqUser,
   ): Promise<PostResponseDto> {
-    return this.postsService.remove(+id, user);
+    return this.postsService.remove(id, user);
   }
 
   @UseGuards(AuthGuard)
   @Post(':id/like')
   toggleLike(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: ReqUser,
   ): Promise<any> {
-    return this.postsService.toggleLike(+id, user.userID);
+    return this.postsService.toggleLike(id, user.userID);
   }
 
   @Get(':id/likes')
   getLikes(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<any> {
-    return this.postsService.getLikes(+id, paginationDto);
+    return this.postsService.getLikes(id, paginationDto);
   }
 
   @UseGuards(AuthGuard)
   @Post(':id/comments')
   addComment(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: ReqUser,
     @Body() createCommentDto: CreateCommentDto,
   ): Promise<any> {
-    return this.postsService.addComment(+id, user.userID, createCommentDto);
+    return this.postsService.addComment(id, user.userID, createCommentDto);
   }
 
   @Get(':id/comments')
-  getComments(@Param('id') id: string): Promise<CommentResponseDto[]> {
-    return this.postsService.getComments(+id);
+  getComments(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CommentResponseDto[]> {
+    return this.postsService.getComments(id);
   }
 
   @UseGuards(AuthGuard)
   @Patch('comments/:commentId')
   updateComment(
-    @Param('commentId') commentId: string,
+    @Param('commentId', ParseIntPipe) commentId: number,
     @Body() updateCommentDto: UpdateCommentDto,
     @CurrentUser() user: ReqUser,
   ): Promise<CommentResponseDto> {
-    return this.postsService.updateComment(+commentId, updateCommentDto, user);
+    return this.postsService.updateComment(commentId, updateCommentDto, user);
   }
 
   @UseGuards(AuthGuard)
   @Delete('comments/:commentId')
   removeComment(
-    @Param('commentId') commentId: string,
+    @Param('commentId', ParseIntPipe) commentId: number,
     @CurrentUser() user: ReqUser,
   ): Promise<CommentResponseDto> {
-    return this.postsService.removeComment(+commentId, user);
+    return this.postsService.removeComment(commentId, user);
   }
 }
