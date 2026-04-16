@@ -111,12 +111,16 @@ export class PostsService {
       return { message: 'You have unliked this post' };
     }
 
-    const newLike = this.likesRepository.create({
-      post: { id: postId },
-      user: { id: userId },
-    });
-    await this.likesRepository.save(newLike);
-    return { message: 'Like successfully' };
+    try {
+      const newLike = this.likesRepository.create({
+        post: { id: postId },
+        user: { id: userId },
+      });
+      await this.likesRepository.save(newLike);
+      return { message: 'Like successfully' };
+    } catch (error) {
+      return { message: 'Like successfully' };
+    }
   }
 
   async getLikes(
