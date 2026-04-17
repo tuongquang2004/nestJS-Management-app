@@ -71,7 +71,7 @@ describe('UsersController', () => {
         username: 'ThuDao',
       });
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1);
       expect(result).toBeDefined();
       expect(mockUsersService.findUserById).toHaveBeenCalledWith(1);
     });
@@ -83,7 +83,7 @@ describe('UsersController', () => {
       const reqUser = { userID: 1, role: 'user', username: 'ThuDao' };
       mockUsersService.update.mockResolvedValue({ id: 1, ...dto });
 
-      const result = await controller.update('1', dto as any, reqUser as any);
+      const result = await controller.update(1, dto as any, reqUser as any);
       expect(result).toBeDefined();
       expect(mockUsersService.update).toHaveBeenCalledWith(1, dto, reqUser);
     });
@@ -93,7 +93,7 @@ describe('UsersController', () => {
     it('should remove a user', async () => {
       mockUsersService.remove.mockResolvedValue({ id: 1, username: 'ThuDao' });
 
-      const result = await controller.remove('1');
+      const result = await controller.remove(1);
       expect(result).toBeDefined();
       expect(mockUsersService.remove).toHaveBeenCalledWith(1);
     });

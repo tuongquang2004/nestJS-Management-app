@@ -43,11 +43,7 @@ export class PostsController {
   @UseInterceptors(CacheInterceptor)
   @Get()
   findAll(@Query() query: PostQueryDto): Promise<any> {
-    return this.postsService.findAll(
-      query.search || '',
-      query.page || 1,
-      query.limit || 10,
-    );
+    return this.postsService.findAll(query.search, query.page, query.limit);
   }
 
   @Get(':id')
