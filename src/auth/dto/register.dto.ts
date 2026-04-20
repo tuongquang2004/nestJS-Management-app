@@ -4,7 +4,7 @@ import { CreateUserDto } from '../../users/dto/create-user.dto';
 
 export class RegisterDto extends CreateUserDto {
   @ApiProperty({
-    example: 'secret123',
+    example: 'StrongPass@123',
     description: 'Please confirm your password',
   })
   @IsString()
