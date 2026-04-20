@@ -6,8 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
-import { AuthDto } from './dto/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { AuthDto, RegisterDto } from './dto';
 
 type SignInData = {
   userID: number;
@@ -15,7 +14,7 @@ type SignInData = {
   role: string;
 };
 
-type AuthResult = {
+export type AuthResult = {
   accessToken: string;
   userID: number;
   username: string;
@@ -48,13 +47,20 @@ export class AuthService {
     return null;
   }
 
-  async register(dto: CreateUserDto) {
+  async register(dto: RegisterDto) {
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException(
+        'Password and Confirm Password do not match!',
+      );
+    }
+
     const existingUser = await this.usersService.findUserByName(dto.username);
     if (existingUser) {
       throw new BadRequestException('Username existed!');
     }
 
-    const newUser = await this.usersService.create(dto);
+    const { confirmPassword, ...createUserDto } = dto;
+    const newUser = await this.usersService.create(createUserDto);
 
     return {
       message: 'Registered successfully!',
@@ -69,7 +75,10 @@ export class AuthService {
       userID: user.userID,
       role: user.role,
     };
-    const accessToken = await this.jwtService.signAsync(tokenPayload);
+
+    const accessToken = await this.jwtService.signAsync(tokenPayload, {
+      expiresIn: '1d',
+    });
 
     return {
       accessToken,

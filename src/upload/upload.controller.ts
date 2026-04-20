@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { UploadService } from './upload.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { AuthGuard } from '../auth/guards';
 import { avatarStorage, postImageStorage } from './configs/multer.config';
 
 @Controller('upload')
@@ -17,14 +17,20 @@ export class UploadController {
   @UseGuards(AuthGuard)
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file', avatarStorage))
-  uploadAvatar(@UploadedFile() file: Express.Multer.File) {
+  uploadAvatar(@UploadedFile() file: Express.Multer.File): {
+    message: string;
+    filename: string;
+  } {
     return this.uploadService.handleFileUpload(file);
   }
 
   @UseGuards(AuthGuard)
   @Post('post-image')
   @UseInterceptors(FileInterceptor('file', postImageStorage))
-  uploadPostImage(@UploadedFile() file: Express.Multer.File) {
+  uploadPostImage(@UploadedFile() file: Express.Multer.File): {
+    message: string;
+    filename: string;
+  } {
     return this.uploadService.handleFileUpload(file);
   }
 }

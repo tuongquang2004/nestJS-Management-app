@@ -5,32 +5,34 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthGuard } from './guards/auth.guard';
-import { AuthDto } from './dto/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { AuthService, AuthResult } from './auth.service';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import type { ReqUser } from '../common/interfaces/req-user.interface';
+import { AuthDto, RegisterDto } from './dto';
+import { AuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: CreateUserDto) {
+  register(
+    @Body() dto: RegisterDto,
+  ): Promise<{ message: string; userID: number; username: string }> {
     return this.authService.register(dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  login(@Body() dto: AuthDto) {
+  login(@Body() dto: AuthDto): Promise<AuthResult> {
     return this.authService.authenticate(dto);
   }
 
   @UseGuards(AuthGuard)
   @Get('me')
-  getUserInfo(@Req() request) {
-    return request.user;
+  getUserInfo(@CurrentUser() user: ReqUser): ReqUser {
+    return user;
   }
 }

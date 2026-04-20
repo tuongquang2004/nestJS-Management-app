@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,10 +8,25 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { UploadModule } from './upload/upload.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { validateEnv } from './config/env.validation';
+import { AppConfigService } from './config/app-config.service';
 
+@Global()
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnv,
+    }),
+
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 20,
+      },
+    ]),
 
     TypeOrmModule.forRootAsync({
       imports: [
@@ -21,17 +36,18 @@ import { CacheModule } from '@nestjs/cache-manager';
           isGlobal: true,
         }),
       ],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (appConfigService: AppConfigService) => ({
         type: 'mysql',
-        host: configService.get('DB_HOST'),
-        port: +configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
+        host: appConfigService.dbHost,
+        port: appConfigService.dbPort,
+        username: appConfigService.dbUsername,
+        password: appConfigService.dbPassword,
+        database: appConfigService.dbName,
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
+        migrations: ['dist/migrations/*{.ts,.js}'],
       }),
-      inject: [ConfigService],
+      inject: [AppConfigService],
     }),
 
     UsersModule,
@@ -43,6 +59,14 @@ import { CacheModule } from '@nestjs/cache-manager';
     UploadModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    AppConfigService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+  exports: [AppConfigService],
 })
 export class AppModule {}

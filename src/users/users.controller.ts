@@ -8,66 +8,74 @@ import {
   Delete,
   Query,
   UseGuards,
-  Req,
-  UseInterceptors,
-  ClassSerializerInterceptor,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, CreateUserResponseDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationDto } from './dto/pagination.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import type { ReqUser } from '../common/interfaces/req-user.interface';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  PaginationDto,
+  UserResponseDto,
+} from './dto';
+import { AuthGuard } from '../auth/guards';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
-@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({
     status: 201,
     description: 'The user has been successfully created.',
-    type: CreateUserResponseDto,
+    type: UserResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post()
-  create(@Body() dto: CreateUserDto) {
+  create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     return this.usersService.create(dto);
   }
 
+  @UseGuards(AuthGuard)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
+  findAll(@Query() paginationDto: PaginationDto): Promise<UserResponseDto[]> {
     return this.usersService.findAll(paginationDto);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findUserById(+id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserResponseDto | null> {
+    return this.usersService.findUserById(id);
   }
 
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
-    @Req() req: Request,
-  ) {
-    const reqUser = req['user'];
-    return this.usersService.update(+id, dto, reqUser);
+    @CurrentUser() reqUser: ReqUser,
+  ): Promise<UserResponseDto> {
+    return this.usersService.update(id, dto, reqUser);
   }
 
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto> {
+    return this.usersService.remove(id);
   }
 }

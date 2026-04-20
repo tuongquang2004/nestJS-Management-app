@@ -2,7 +2,10 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class UploadService {
-  handleFileUpload(file: Express.Multer.File) {
+  handleFileUpload(file: Express.Multer.File): {
+    message: string;
+    filename: string;
+  } {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }

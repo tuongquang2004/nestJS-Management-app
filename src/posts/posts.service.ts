@@ -6,14 +6,14 @@ import {
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Repository, Like as SearchLike } from 'typeorm';
-import { Post } from './entities/post.entity';
-import { Like } from './entities/like.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationDto } from 'src/users/dto/pagination.dto';
-import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
-import { Comment } from './entities/comment.entity';
+import { PaginationDto } from '../users/dto/pagination.dto';
+import { DEFAULT_PAGE_SIZE } from '../common/constants/constants';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { ReqUser } from '../common/interfaces/req-user.interface';
+import { Post, Like, Comment } from './entities';
+import { User } from '../users/entities';
 
 @Injectable()
 export class PostsService {
@@ -23,7 +23,7 @@ export class PostsService {
     @InjectRepository(Comment) private commentsRepository: Repository<Comment>,
   ) {}
 
-  async create(createPostDto: CreatePostDto, userId: number) {
+  async create(createPostDto: CreatePostDto, userId: number): Promise<Post> {
     const newPost = this.postsRepository.create({
       title: createPostDto.title,
       content: createPostDto.content,
@@ -32,7 +32,11 @@ export class PostsService {
     return await this.postsRepository.save(newPost);
   }
 
-  async findAll(search: string, page: number, limit: number) {
+  async findAll(
+    search: string,
+    page: number,
+    limit: number,
+  ): Promise<{ data: Post[]; info: any }> {
     const take = limit || 10;
     const currentPage = page || 1;
     const skip = (currentPage - 1) * take;
@@ -62,7 +66,7 @@ export class PostsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Post> {
     const post = await this.postsRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -72,7 +76,11 @@ export class PostsService {
     return post;
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto, reqUser: any) {
+  async update(
+    id: number,
+    updatePostDto: UpdatePostDto,
+    reqUser: ReqUser,
+  ): Promise<Post> {
     const post = await this.findOne(id);
     if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
       throw new ForbiddenException('You cannot edit this post!');
@@ -81,7 +89,7 @@ export class PostsService {
     return await this.postsRepository.save(post);
   }
 
-  async remove(id: number, reqUser: any) {
+  async remove(id: number, reqUser: ReqUser): Promise<Post> {
     const post = await this.findOne(id);
     if (post.user.id !== reqUser.userID && reqUser.role !== 'admin') {
       throw new ForbiddenException('You cannot delete this post!');
@@ -89,26 +97,10 @@ export class PostsService {
     return await this.postsRepository.remove(post);
   }
 
-  async likePost(postId: number, userId: number) {
-    await this.findOne(postId);
-    const existingLike = await this.likesRepository.findOne({
-      where: { post: { id: postId }, user: { id: userId } },
-    });
-
-    if (existingLike) {
-      return { message: 'You have liked this post' };
-    }
-
-    const newLike = this.likesRepository.create({
-      post: { id: postId },
-      user: { id: userId },
-    });
-    await this.likesRepository.save(newLike);
-
-    return { message: 'Like successfully' };
-  }
-
-  async unlikePost(postId: number, userId: number) {
+  async toggleLike(
+    postId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
     await this.findOne(postId);
     const existingLike = await this.likesRepository.findOne({
       where: { post: { id: postId }, user: { id: userId } },
@@ -116,11 +108,25 @@ export class PostsService {
 
     if (existingLike) {
       await this.likesRepository.remove(existingLike);
+      return { message: 'You have unliked this post' };
     }
-    return { message: 'You have unliked this post' };
+
+    try {
+      const newLike = this.likesRepository.create({
+        post: { id: postId },
+        user: { id: userId },
+      });
+      await this.likesRepository.save(newLike);
+      return { message: 'Like successfully' };
+    } catch (error) {
+      return { message: 'Like successfully' };
+    }
   }
 
-  async getLikes(postId: number, paginationDto: PaginationDto) {
+  async getLikes(
+    postId: number,
+    paginationDto: PaginationDto,
+  ): Promise<{ totalLikes: number; likedBy: User[] }> {
     await this.findOne(postId);
     const [likes, count] = await this.likesRepository.findAndCount({
       where: { post: { id: postId } },
@@ -140,7 +146,7 @@ export class PostsService {
     postId: number,
     userId: number,
     createCommentDto: CreateCommentDto,
-  ) {
+  ): Promise<{ message: string; data: Comment }> {
     await this.findOne(postId);
     const newComment = this.commentsRepository.create({
       content: createCommentDto.content,
@@ -151,7 +157,7 @@ export class PostsService {
     return { message: 'Comment successfully added', data: newComment };
   }
 
-  async getComments(postId: number) {
+  async getComments(postId: number): Promise<Comment[]> {
     await this.findOne(postId);
     return await this.commentsRepository.find({
       where: { post: { id: postId } },
@@ -164,8 +170,8 @@ export class PostsService {
   async updateComment(
     commentId: number,
     updateCommentDto: UpdateCommentDto,
-    reqUser: any,
-  ) {
+    reqUser: ReqUser,
+  ): Promise<Comment> {
     const comment = await this.commentsRepository.findOne({
       where: { id: commentId },
       relations: ['user'],
@@ -178,7 +184,7 @@ export class PostsService {
     return await this.commentsRepository.save(comment);
   }
 
-  async removeComment(commentId: number, reqUser: any) {
+  async removeComment(commentId: number, reqUser: ReqUser): Promise<Comment> {
     const comment = await this.commentsRepository.findOne({
       where: { id: commentId },
       relations: ['user'],
