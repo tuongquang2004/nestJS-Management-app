@@ -14,6 +14,7 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ReqUser } from '../common/interfaces/req-user.interface';
 import { Post, Like, Comment } from './entities';
 import { User } from '../users/entities';
+import { PostQueryDto } from './dto/post-query.dto';
 
 @Injectable()
 export class PostsService {
@@ -32,29 +33,42 @@ export class PostsService {
     return await this.postsRepository.save(newPost);
   }
 
-  async findAll(
-    search: string,
-    page: number,
-    limit: number,
-  ): Promise<{ data: Post[]; info: any }> {
+  async findAll(queryDto: PostQueryDto): Promise<{ data: Post[]; info: any }> {
+    const { search, authorId, sortBy, sortOrder, page, limit } = queryDto;
+
     const take = limit || 10;
     const currentPage = page || 1;
-    const skip = (currentPage - 1) * take;
+    const skipItems = (currentPage - 1) * take;
 
-    const whereCondition = search
-      ? [
-          { title: SearchLike(`%${search}%`) },
-          { content: SearchLike(`%${search}%`) },
-        ]
-      : {};
+    const query = this.postsRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.user', 'user')
+      .addSelect(['user.id', 'user.username', 'user.email']);
 
-    const [posts, total] = await this.postsRepository.findAndCount({
-      where: whereCondition,
-      relations: ['user'],
-      select: { user: { id: true, username: true, email: true } },
-      take: take,
-      skip: skip,
-    });
+    if (search) {
+      query.andWhere(
+        '(post.title ILIKE :search OR post.content ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (authorId) {
+      query.andWhere('user.id = :authorId', { authorId });
+    }
+
+    if (sortBy) {
+      const allowedSortColumns = ['title', 'createdAt', 'updatedAt'];
+      const sortColumn = allowedSortColumns.includes(sortBy)
+        ? `post.${sortBy}`
+        : 'post.createdAt';
+      query.orderBy(sortColumn, sortOrder || 'DESC');
+    } else {
+      query.orderBy('post.createdAt', 'DESC');
+    }
+
+    query.skip(skipItems).take(take);
+
+    const [posts, total] = await query.getManyAndCount();
 
     return {
       data: posts,
