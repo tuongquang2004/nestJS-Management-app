@@ -42,8 +42,9 @@ export class PostsService {
 
     const query = this.postsRepository
       .createQueryBuilder('post')
-      .leftJoin('post.user', 'user')
-      .addSelect(['user.id', 'user.username', 'user.email']);
+      .leftJoinAndSelect('post.user', 'user')
+      .select(['post', 'user.id', 'user.username', 'user.email'])
+      .loadRelationCountAndMap('post.commentCount', 'post.comments');
 
     if (search) {
       query.andWhere(
