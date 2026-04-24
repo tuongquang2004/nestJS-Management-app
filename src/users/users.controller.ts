@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { UserQueryDto } from './dto/user-query.dto';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -50,8 +51,8 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto): Promise<UserResponseDto[]> {
-    return this.usersService.findAll(paginationDto);
+  findAll(@Query() queryDto: UserQueryDto): Promise<any> {
+    return this.usersService.findAll(queryDto);
   }
 
   @UseGuards(AuthGuard)
