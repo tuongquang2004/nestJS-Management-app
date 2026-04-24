@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DEFAULT_PAGE_SIZE } from '../common/constants/constants';
 import * as bcrypt from 'bcrypt';
 import { ReqUser } from '../common/interfaces/req-user.interface';
+import { UserQueryDto } from './dto/user-query.dto';
 import {
   CreateUserDto,
   UpdateUserDto,
@@ -33,11 +34,44 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<UserResponseDto[]> {
-    return this.userRepository.find({
-      skip: paginationDto.skip,
-      take: paginationDto.limit ?? DEFAULT_PAGE_SIZE,
-    });
+  async findAll(
+    queryDto: UserQueryDto,
+  ): Promise<{ data: UserResponseDto[]; info: any }> {
+    const { search, role, sortBy, sortOrder, skip, limit } = queryDto;
+
+    const query = this.userRepository.createQueryBuilder('user');
+
+    if (search) {
+      query.andWhere(
+        '(user.username ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (role) {
+      query.andWhere('user.role = :role', { role });
+    }
+
+    if (sortBy) {
+      query.orderBy(`user.${sortBy}`, sortOrder || 'DESC');
+    } else {
+      query.orderBy('user.id', 'DESC');
+    }
+
+    const take = limit ?? DEFAULT_PAGE_SIZE;
+    const skipItems = skip || 0;
+    query.skip(skipItems).take(take);
+
+    const [users, total] = await query.getManyAndCount();
+
+    return {
+      data: users,
+      info: {
+        totalItems: total,
+        currentPage: skipItems === 0 ? 1 : Math.floor(skipItems / take) + 1,
+        totalPages: Math.ceil(total / take),
+      },
+    };
   }
 
   async findUserById(id: number): Promise<UserResponseDto | null> {
