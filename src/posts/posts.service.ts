@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Repository, Like as SearchLike } from 'typeorm';
+import { Repository, DataSource, Like as SearchLike } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from '../users/dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from '../common/constants/constants';
@@ -21,6 +21,7 @@ export class PostsService {
     @InjectRepository(Post) private postsRepository: Repository<Post>,
     @InjectRepository(Like) private likesRepository: Repository<Like>,
     @InjectRepository(Comment) private commentsRepository: Repository<Comment>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post> {
@@ -194,5 +195,72 @@ export class PostsService {
       throw new ForbiddenException('You cannot delete this comment!');
     }
     return await this.commentsRepository.remove(comment);
+  }
+
+  async transferOwnership(
+    postId: number,
+    senderId: number,
+    receiverId: number,
+  ): Promise<{ message: string }> {
+    if (senderId === receiverId) {
+      throw new ForbiddenException('Cannot transfer ownership to yourself');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const post = await queryRunner.manager
+        .createQueryBuilder(Post, 'post')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id = :postId', { postId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!post) throw new NotFoundException('Post not found');
+      if (post.user.id !== senderId)
+        throw new ForbiddenException('You are not the owner of this post');
+
+      const receiver = await queryRunner.manager
+        .createQueryBuilder(User, 'user')
+        .where('user.id = :id', { id: receiverId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!receiver) throw new NotFoundException('Receiver not found');
+      if (receiver.tokens < 1)
+        throw new ForbiddenException(
+          'Receiver does not have enough Token to receive the post',
+        );
+
+      const sender = await queryRunner.manager
+        .createQueryBuilder(User, 'user')
+        .where('user.id = :id', { id: senderId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!sender) {
+        throw new NotFoundException('Sender not found');
+      }
+
+      receiver.tokens -= 1;
+      sender.tokens += 1;
+      post.user = receiver;
+
+      await queryRunner.manager.save(receiver);
+      await queryRunner.manager.save(sender);
+      await queryRunner.manager.save(post);
+
+      await queryRunner.commitTransaction();
+
+      return { message: 'Transfer ownership successfully.' };
+    } catch (error) {
+      // ROLLBACK
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
