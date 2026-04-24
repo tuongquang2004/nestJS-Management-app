@@ -26,6 +26,8 @@ import {
   CommentResponseDto,
   PostQueryDto,
 } from './dto';
+import { TransferPostDto } from './dto/transfer-post.dto';
+import { ApiBearerAuth, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('posts')
 export class PostsController {
@@ -123,5 +125,23 @@ export class PostsController {
     @CurrentUser() user: ReqUser,
   ): Promise<CommentResponseDto> {
     return this.postsService.removeComment(commentId, user);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post(':id/transfer')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Transfer Post Ownership' })
+  @ApiResponse({ status: 201, description: 'Transfer ownership successfully.' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden. You are not the owner of this post or receiver does not have enough tokens.',
+  })
+  transfer(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: TransferPostDto,
+    @CurrentUser() user: ReqUser,
+  ) {
+    return this.postsService.transferOwnership(id, user.userID, dto.receiverId);
   }
 }

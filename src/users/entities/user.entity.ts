@@ -24,4 +24,7 @@ export class User {
 
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @Column({ type: 'int', default: 10 })
+  tokens: number;
 }
