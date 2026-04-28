@@ -4,6 +4,7 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt/dist/jwt.module';
 import { ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   providers: [AuthService],
@@ -17,6 +18,9 @@ import { ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '1d' },
       }),
       inject: [ConfigService],
+    }),
+    BullModule.registerQueue({
+      name: 'mail-queue',
     }),
   ],
 })

@@ -2,6 +2,8 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -24,4 +26,11 @@ export class User {
 
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @ManyToMany(() => User, (user) => user.following)
+  @JoinTable({ name: 'user_follows' })
+  followers: User[];
+
+  @ManyToMany(() => User, (user) => user.followers)
+  following: User[];
 }
