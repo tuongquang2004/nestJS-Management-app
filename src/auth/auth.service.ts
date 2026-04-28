@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { AuthDto, RegisterDto } from './dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 type SignInData = {
   userID: number;
@@ -25,6 +27,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @InjectQueue('mail-queue') private mailQueue: Queue,
   ) {}
 
   async authenticate(dto: AuthDto): Promise<AuthResult> {
@@ -62,8 +65,14 @@ export class AuthService {
     const { confirmPassword, ...createUserDto } = dto;
     const newUser = await this.usersService.create(createUserDto);
 
+    await this.mailQueue.add('send-verification-email', {
+      email: newUser.email,
+      username: newUser.username,
+      token: 'fake-jwt-token-123',
+    });
+
     return {
-      message: 'Registered successfully!',
+      message: 'Registered successfully! Please check your email to verify.',
       userID: newUser.id,
       username: newUser.username,
     };

@@ -12,6 +12,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { validateEnv } from './config/env.validation';
 import { AppConfigService } from './config/app-config.service';
+import { BullModule } from '@nestjs/bullmq';
+import { MailModule } from './mail/mail.module';
 
 @Global()
 @Module({
@@ -50,6 +52,17 @@ import { AppConfigService } from './config/app-config.service';
       inject: [AppConfigService],
     }),
 
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+
     UsersModule,
 
     AuthModule,
@@ -57,6 +70,8 @@ import { AppConfigService } from './config/app-config.service';
     PostsModule,
 
     UploadModule,
+
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

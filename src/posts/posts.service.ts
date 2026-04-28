@@ -14,6 +14,8 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ReqUser } from '../common/interfaces/req-user.interface';
 import { Post, Like, Comment } from './entities';
 import { User } from '../users/entities';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class PostsService {
@@ -21,6 +23,8 @@ export class PostsService {
     @InjectRepository(Post) private postsRepository: Repository<Post>,
     @InjectRepository(Like) private likesRepository: Repository<Like>,
     @InjectRepository(Comment) private commentsRepository: Repository<Comment>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectQueue('mail-queue') private mailQueue: Queue,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post> {
@@ -29,7 +33,29 @@ export class PostsService {
       content: createPostDto.content,
       user: { id: userId },
     });
-    return await this.postsRepository.save(newPost);
+    const savedPost = await this.postsRepository.save(newPost);
+
+    const author = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['followers'],
+    });
+
+    const followerEmails =
+      author?.followers?.map((follower) => follower.email) || [];
+
+    if (followerEmails.length > 0) {
+      const jobs = followerEmails.map((email) => ({
+        name: 'send-new-post-notification',
+        data: {
+          email: email,
+          postTitle: savedPost.title,
+        },
+      }));
+
+      await this.mailQueue.addBulk(jobs);
+    }
+
+    return savedPost;
   }
 
   async findAll(
